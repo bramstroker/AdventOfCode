@@ -12,6 +12,12 @@ for ($i = 0; $i < strlen($input); $i++) {
     if ($char == ')') {
         $floor--;
     }
+
+    // For second part
+    if ($floor < 0 && !isset($basementHitAt)) {
+        $basementHitAt = $i + 1;
+    }
 }
 
-echo $floor;
+echo 'First part answer:' . $floor . PHP_EOL;
+echo 'Second part answer:' . $basementHitAt . PHP_EOL;
