@@ -7,17 +7,24 @@ class LightGrid
      */
     protected $lights = [];
 
+    protected $defaultState = false;
+
+    /** @var LightswitchStrategy */
+    protected $lightSwitchingStrategy;
+
     /**
      *
      */
-    public function __construct()
+    public function __construct(LightswitchStrategy $lightswitchStrategy)
     {
         // Construct the grid and turn off all lights by default
         for ($x = 0; $x < 1000; $x++) {
             for ($y = 0; $y < 1000; $y++) {
-                $this->lights[$x][$y] = false;
+                $this->lights[$x][$y] = $lightswitchStrategy->getDefaultState();
             }
         }
+
+        $this->lightSwitchingStrategy = $lightswitchStrategy;
     }
 
     /**
@@ -27,30 +34,34 @@ class LightGrid
     {
         for ($x = $command->getFrom()->getX(); $x <= $command->getTo()->getX(); $x++) {
             for ($y = $command->getFrom()->getY(); $y <= $command->getTo()->getY(); $y++) {
-                if ($command->getCommand() == LightSwitchCommand::COMMAND_TOGGLE) {
-                    $newState = !$this->lights[$x][$y];
-                } else {
-                    $newState = ($command->getCommand() == LightSwitchCommand::COMMAND_ON) ? true : false;
-                }
-                $this->lights[$x][$y] = $newState;
+                $this->lights[$x][$y] = $this->lightSwitchingStrategy->getNewStateForLight(
+                    $x,
+                    $y,
+                    $this->lights[$x][$y],
+                    $command->getCommand()
+                );
             }
         }
     }
 
+    /**
+     * @return array
+     */
     public function getLights()
     {
         return $this->lights;
     }
 
     /**
+     * @param mixed $state
      * @return int
      */
-    public function getNumLightsLit()
+    public function getNumLights($state)
     {
         $numLit = 0;
         for ($x = 0; $x < 1000; $x++) {
             for ($y = 0; $y < 1000; $y++) {
-                if ($this->lights[$x][$y] === true) {
+                if ($this->lights[$x][$y] === $state) {
                     $numLit++;
                 }
             }
@@ -73,6 +84,88 @@ class LightGrid
         return $output;
     }
 
+}
+
+interface LightswitchStrategy
+{
+    /**
+     * @param int $x
+     * @param int $y
+     * @param mixed $currentState
+     * @param string $command
+     * @return mixed
+     */
+    public function getNewStateForLight($x, $y, $currentState, $command);
+
+    /**
+     * @return mixed
+     */
+    public function getDefaultState();
+}
+
+class OnOffLightStrategy implements LightswitchStrategy
+{
+
+    /**
+     * @param int $x
+     * @param int $y
+     * @param mixed $currentState
+     * @param string $command
+     * @return mixed
+     */
+    public function getNewStateForLight($x, $y, $currentState, $command)
+    {
+        if ($command == LightSwitchCommand::COMMAND_TOGGLE) {
+            $newState = !$currentState;
+        } else {
+            $newState = ($command == LightSwitchCommand::COMMAND_ON) ? true : false;
+        }
+        return $newState;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getDefaultState()
+    {
+        return false;
+    }
+}
+
+class BrightnessLightStrategy implements LightswitchStrategy
+{
+    /**
+     * @param int $x
+     * @param int $y
+     * @param mixed $currentState
+     * @param string $command
+     * @return mixed
+     */
+    public function getNewStateForLight($x, $y, $currentState, $command)
+    {
+        switch ($command) {
+            case LightSwitchCommand::COMMAND_OFF:
+                if ($currentState > 0) {
+                    $currentState -= 1;
+                }
+                break;
+            case LightSwitchCommand::COMMAND_ON:
+                $currentState += 1;
+                break;
+            case LightSwitchCommand::COMMAND_TOGGLE:
+                $currentState += 2;
+                break;
+        }
+        return $currentState;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getDefaultState()
+    {
+        return 0;
+    }
 }
 
 class Coordinate
@@ -212,12 +305,28 @@ class CommandParser
 }
 
 $parser = new CommandParser();
-$lightGrid = new LightGrid();
+
+$lightGrid = new LightGrid(new OnOffLightStrategy());
 
 foreach (file('6.txt') as $instruction) {
     echo 'excecuting ' . $instruction . PHP_EOL;
     $lightGrid->toggleLights($parser->parseCommand($instruction));
 }
 
-echo 'answer is: ' . $lightGrid->getNumLightsLit();
+echo 'Part 1 answer: ' . $lightGrid->getNumLights(true);
 
+$lightGrid = new LightGrid(new BrightnessLightStrategy());
+
+foreach (file('6.txt') as $instruction) {
+    echo 'excecuting ' . $instruction . PHP_EOL;
+    $lightGrid->toggleLights($parser->parseCommand($instruction));
+}
+
+$totalBrightness = 0;
+foreach ($lightGrid->getLights() as $x => $arr) {
+    foreach ($arr as $y => $brightness) {
+        $totalBrightness += $brightness;
+    }
+}
+
+echo 'Part 2 answer: ' . $totalBrightness;
