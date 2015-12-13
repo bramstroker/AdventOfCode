@@ -28,6 +28,7 @@ $routes = [];
 calculateAllPossibleRoutes($destinations, [], $routes);
 
 $lowestDistance = null;
+$highestDistance = null;
 
 foreach ($routes as $route) {
     $totalDistance = 0;
@@ -38,6 +39,10 @@ foreach ($routes as $route) {
     if ($lowestDistance == null || $totalDistance < $lowestDistance) {
         $lowestDistance = $totalDistance;
     }
+    if ($highestDistance == null || $totalDistance > $highestDistance) {
+        $highestDistance = $totalDistance;
+    }
 }
 
-echo 'Part 1 answer: ' . $lowestDistance;
+echo 'Part 1 answer: ' . $lowestDistance . PHP_EOL;
+echo 'Part 2 answer: ' . $highestDistance;
