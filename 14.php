@@ -40,7 +40,6 @@ class Race
     {
         $secondsElasped = 0;
         do {
-            echo $secondsElasped . PHP_EOL;
             array_walk($this->reindeers, function($reindeer) {
                 $reindeer->advance();
             });
