@@ -38,14 +38,7 @@ function isNiceString2($string)
     }
 
     // Same character twice with one character between them
-    $ruleMet = false;
-    foreach (range('a', 'z') as $char) {
-        if (preg_match('/' . $char . '[a-z]{1}' . $char . '/', $string) > 0) {
-            $ruleMet = true;
-            break;
-        }
-    }
-    if (!$ruleMet) {
+    if (preg_match('/([a-z])[a-z]\1/', $string) == 0) {
         return false;
     }
 
