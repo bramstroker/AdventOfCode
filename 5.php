@@ -33,8 +33,7 @@ function isNiceString($string)
 function isNiceString2($string)
 {
     // Pair of two letters at least twice in the string
-    preg_match_all('/(?=([a-z]{2}))/', $string, $matches);
-    if (count(array_unique($matches[1])) === count($matches[1])) {
+    if (preg_match('/([a-z]{2}).*\1/', $string) == 0) {
         return false;
     }
 
