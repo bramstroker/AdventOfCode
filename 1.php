@@ -2,9 +2,8 @@
 $input = file_get_contents('1.txt');
 
 $floor = 0;
-for ($i = 0; $i < strlen($input); $i++) {
-    $char = substr($input, $i, 1);
-
+$i = 0;
+foreach (str_split($input) as $char) {
     if ($char == '(') {
         $floor++;
     }
@@ -17,6 +16,7 @@ for ($i = 0; $i < strlen($input); $i++) {
     if ($floor < 0 && !isset($basementHitAt)) {
         $basementHitAt = $i + 1;
     }
+    $i++;
 }
 
 echo 'First part answer:' . $floor . PHP_EOL;
