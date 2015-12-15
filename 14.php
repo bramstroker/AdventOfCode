@@ -88,8 +88,6 @@ class Reindeer
     /** @var int */
     protected $counter = 0;
 
-    protected $total = 0;
-
     /**
      * @param string $name
      * @param int $flySpeed
