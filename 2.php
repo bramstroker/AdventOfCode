@@ -1,32 +1,68 @@
 <?php
-function calculatePaperSize($presentDimensions)
+class Present
 {
-    list($l, $w, $h) = explode('x', $presentDimensions);
+    private $x;
+    private $y;
+    private $z;
 
-    $sides = [
-        $l * $w,
-        $w * $h,
-        $h * $l
-    ];
-
-    $paperNeeded = 0;
-    foreach ($sides as $side) {
-        $paperNeeded += 2 * $side;
+    public function __construct($x, $y, $z)
+    {
+        $this->x = (int) $x;
+        $this->y = (int) $y;
+        $this->z = (int) $z;
     }
 
-    // Add extra paper (smallest side)
-    $paperNeeded += min($sides);
+    public static function fromString($string)
+    {
+        $parts = explode('x', $string);
+        return new self($parts[0], $parts[1], $parts[2]);
+    }
 
-    return $paperNeeded;
+    public function getSides()
+    {
+        return [
+            $this->x * $this->y,
+            $this->y * $this->z,
+            $this->x * $this->z
+        ];
+    }
+
+    public function getSurfaceArea()
+    {
+        return array_sum($this->getSides()) * 2;
+    }
+
+    public function getVolume()
+    {
+        return $this->x * $this->y * $this->z;
+    }
+
+    public function getPaperNeeded()
+    {
+        return $this->getSurfaceArea() + min($this->getSides());
+    }
+
+    public function getRibbonNeeded()
+    {
+        $dimensions = [$this->x, $this->y, $this->z];
+        sort($dimensions);
+        return $this->getVolume() + ($dimensions[0] * 2 + $dimensions[1] * 2);
+    }
 }
 
-assert(calculatePaperSize('2x3x4') == 58);
-assert(calculatePaperSize('1x1x10') == 43);
+assert(Present::fromString('2x3x4')->getPaperNeeded() == 58);
+assert(Present::fromString('1x1x10')->getPaperNeeded() == 43);
+assert(Present::fromString('2x3x4')->getRibbonNeeded() == 34);
+assert(Present::fromString('1x1x10')->getRibbonNeeded() == 14);
 
-$presentDimensions = file('2.txt');
-$totalPaperNeeded = 0;
-foreach($presentDimensions as $dim) {
-    $totalPaperNeeded += calculatePaperSize($dim);
+$totalPaper = 0;
+$totalRibbon = 0;
+foreach(file('2.txt') as $dimensions) {
+    $present = Present::fromString($dimensions);
+
+    $totalPaper += $present->getPaperNeeded();
+    $totalRibbon += $present->getRibbonNeeded();
 }
 
-echo $totalPaperNeeded;
+echo sprintf('Part 1 answer: %s', $totalPaper) . PHP_EOL;
+echo sprintf('Part 2 answer: %s', $totalRibbon) . PHP_EOL;
