@@ -17,7 +17,7 @@ foreach ($lines as $line) {
 
 $race->startRace(2503);
 
-$winner = $race->getLeader();
+$winner = $race->getLeaders()[0];
 
 echo array_sum($race->getPoints());
 
@@ -71,27 +71,38 @@ class Race
      */
     protected function awardPointToLeader()
     {
-        $leader = $this->getLeader();
-        if (!isset($this->points[$leader->getName()])) {
-            $this->points[$leader->getName()] = 0;
+        foreach ($this->getLeaders() as $leader) {
+            if (!isset($this->points[$leader->getName()])) {
+                $this->points[$leader->getName()] = 0;
+            }
+            $this->points[$leader->getName()]++;
         }
-        $this->points[$leader->getName()]++;
     }
 
     /**
      * Get reindeer which has covered the most distance
      *
-     * @return Reindeer
+     * @return Reindeer[]
      */
-    public function getLeader()
+    public function getLeaders()
     {
         usort($this->reindeers, function(Reindeer $a, Reindeer $b) {
             if ($a->getDistanceCovered() == $b->getDistanceCovered()) {
                 return 0;
             }
-            return ($a->getDistanceCovered() < $b->getDistanceCovered()) ? -1 : 1;
+            return ($a->getDistanceCovered() < $b->getDistanceCovered()) ? 1 : -1;
         });
-        return end($this->reindeers);
+
+        $leaderDistance = $this->reindeers[0]->getDistanceCovered();
+        $leaders = [];
+        foreach ($this->reindeers as $reindeer) {
+            if ($reindeer->getDistanceCovered() !== $leaderDistance) {
+                break;
+            }
+            $leaders[] = $reindeer;
+        }
+
+        return $leaders;
     }
 
     /**
