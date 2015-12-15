@@ -2,10 +2,19 @@
 class PresentDeliverer
 {
     /** @var array */
-    private $presentCount = [];
+    protected $presentCount = [];
 
     /** @var array */
-    private $position = [0, 0];
+    protected $positions = [];
+
+    /** @var array */
+    protected $persons = [];
+
+    public function __construct($persons = [])
+    {
+        $this->persons = $persons;
+        $this->reset();
+    }
 
     /**
      * @param $route
@@ -14,47 +23,60 @@ class PresentDeliverer
     public function doDelivery($route)
     {
         $this->reset();
-        $this->deliverPresent();
-        for ($i = 0; $i < strlen($route); $i++) {
-            $command = substr($route, $i, 1);
-            $this->move($command);
-            $this->deliverPresent();
+        foreach ($this->persons as $person) {
+            $this->deliverPresent($person);
+        }
+
+        foreach (str_split($route) as $i => $command) {
+            if (count($this->persons) == 1) {
+                $personToAct = $this->persons[0];
+            } else {
+                $personToAct = $this->persons[$i % 2 == 0 ? 1 : 0];
+            }
+            $this->move($command, $personToAct);
+            $this->deliverPresent($personToAct);
         }
         return $this->presentCount;
     }
 
-    private function reset()
+    protected function reset()
     {
-        $this->position = [0, 0];
+        foreach ($this->persons as $person) {
+            $this->positions[$person] = [0, 0];
+        }
+
         $this->presentCount = [];
     }
 
     /**
      * @param string $command
+     * @param string $who
      */
-    private function move($command) {
+    protected function move($command, $who) {
         switch ($command) {
             case '^':
-                $this->position[1]--;
+                $this->positions[$who][1]--;
                 break;
             case 'v':
-                $this->position[1]++;
+                $this->positions[$who][1]++;
                 break;
             case '>':
-                $this->position[0]++;
+                $this->positions[$who][0]++;
                 break;
             case '<':
-                $this->position[0]--;
+                $this->positions[$who][0]--;
                 break;
         }
     }
 
+
     /**
      * Delivers a present at the current position on the grid
      */
-    private function deliverPresent()
+    private function deliverPresent($who)
     {
-        $key = implode(':', $this->position);
+        $position = $this->positions[$who];
+        $key = implode(':', $position);
         if (!isset($this->presentCount[$key])) {
             $this->presentCount[$key] = 0;
         }
@@ -62,11 +84,18 @@ class PresentDeliverer
     }
 }
 
-$presentDeliverer = new PresentDeliverer();
+$input = file_get_contents('3.txt');
 
-/*print_r($presentDeliverer->doDelivery('>'));
-print_r($presentDeliverer->doDelivery('^>v<'));
-print_r($presentDeliverer->doDelivery('^v^v^v^v^v'));*/
+$presentDeliverer1 = new PresentDeliverer(['santa']);
+$presentDeliverer2 = new PresentDeliverer(['santa', 'robo']);
 
-$presentCounts = $presentDeliverer->doDelivery(file_get_contents('3.txt'));
-echo count($presentCounts);
+/*print_r($presentDeliverer1->doDelivery('>'));
+print_r($presentDeliverer1->doDelivery('^>v<'));
+print_r($presentDeliverer1->doDelivery('^v^v^v^v^v'));
+print_r($presentDeliverer2->doDelivery('^v'));
+print_r($presentDeliverer2->doDelivery('^>v<'));
+print_r($presentDeliverer2->doDelivery('^v^v^v^v^v'));*/
+
+echo sprintf('Part 1 answer: %s', count($presentDeliverer1->doDelivery($input))) . PHP_EOL;
+echo sprintf('Part 2 answer: %s', count($presentDeliverer2->doDelivery($input))) . PHP_EOL;
+
